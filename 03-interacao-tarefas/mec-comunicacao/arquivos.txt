@@ -1,0 +1,3 @@
+Estudo de mecanismos de comunicação
+
+- Filas de mensagens e memoria compartilhada
