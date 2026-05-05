@@ -1,0 +1,48 @@
+#include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+
+pthread_mutex_t mtx = PTHREAD_MUTEX_INITIALIZER;
+pthread_cond_t cond = PTHREAD_COND_INITIALIZER;
+int cliente_chegou = 0; // 0 = vago, 1 = carro no posto
+
+void* frentista(void* arg) {
+    pthread_mutex_lock(&mtx);
+    
+    while (cliente_chegou == 0) {
+        printf("Frentista: Não há carros. Vou cochilar...\n");
+        // Dorme e libera o mutex para o cliente poder entrar
+        pthread_cond_wait(&cond, &mtx);
+    }
+
+    printf("Frentista: Opa! Acordei. Abastecendo o carro...\n");
+    pthread_mutex_unlock(&mtx);
+    return NULL;
+}
+
+void* cliente(void* arg) {
+    sleep(3); // Simula o tempo de viagem até o posto
+    
+    pthread_mutex_lock(&mtx);
+    printf("Cliente: Cheguei no posto e parei o carro!\n");
+    cliente_chegou = 1;
+    
+    pthread_cond_signal(&cond); // Dá uma "buzinada" para acordar o frentista
+    pthread_mutex_unlock(&mtx);
+    
+    return NULL;
+}
+
+int main() {
+    pthread_t t1, t2;
+
+    // Cria as threads
+    pthread_create(&t1, NULL, frentista, NULL);
+    pthread_create(&t2, NULL, cliente, NULL);
+
+    // Espera ambas terminarem
+    pthread_join(t1, NULL);
+    pthread_join(t2, NULL);
+
+    return 0;
+}
